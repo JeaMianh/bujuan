@@ -1,15 +1,10 @@
-name: Build APK
+name: Build APK for Personal Use
 
 on:
   push:
     branches:
       - feature/new-ui
-    tags:
-      - 'v*'
-  pull_request:
-    branches:
-      - feature/new-ui
-  workflow_dispatch:
+  workflow_dispatch: # 保留手动触发，方便随时在 Actions 页面点击运行
 
 jobs:
   build:
@@ -20,7 +15,7 @@ jobs:
       contents: read
 
     steps:
-      - name: Checkout repository (with submodules)
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: recursive
@@ -39,21 +34,9 @@ jobs:
       - name: Get Flutter dependencies
         run: flutter pub get
 
-      - name: Decode keystore (if secret is configured)
-        if: ${{ secrets.KEYSTORE_BASE64 != '' }}
-        run: |
-          KEYSTORE_PATH="$GITHUB_WORKSPACE/android/app/release-keystore.jks"
-          echo "$KEYSTORE_BASE64" | base64 -d > "$KEYSTORE_PATH"
-          echo "KEYSTORE_FILE=$KEYSTORE_PATH" >> "$GITHUB_ENV"
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-
+      # 移除了签名步骤，直接打包
       - name: Build release APK
         run: flutter build apk --release
-        env:
-          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -61,24 +44,3 @@ jobs:
           name: bujuan-release-apk
           path: build/app/outputs/flutter-apk/app-release.apk
           retention-days: 30
-
-  release:
-    name: Create GitHub Release
-    runs-on: ubuntu-latest
-    needs: build
-    if: startsWith(github.ref, 'refs/tags/v')
-
-    permissions:
-      contents: write
-
-    steps:
-      - name: Download APK artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: bujuan-release-apk
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          files: app-release.apk
-          generate_release_notes: true
