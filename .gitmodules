@@ -1,0 +1,3 @@
+[submodule "plugin/bujuan_music_api"]
+	path = plugin/bujuan_music_api
+	url = https://github.com/JeaMianh/bujuan_music_api
