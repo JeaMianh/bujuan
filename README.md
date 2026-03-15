@@ -55,13 +55,16 @@ flutter build macos            # macOS
 
 本项目已配置 GitHub Actions 工作流，可在 GitHub 上直接构建可安装的 APK，无需本地环境。
 
+> **重要提示**：GitHub 规定，Actions 的手动触发按钮（Run workflow）只会在**默认分支**上存在工作流文件时才出现。请先将此 PR 合并到默认分支 `feature/new-ui`，之后按钮即可出现。
+
 #### 方式一：手动触发构建（获取 APK）
 
-1. 打开仓库页面，点击顶部 **Actions** 标签
-2. 在左侧选择 **Build APK**
-3. 点击右侧 **Run workflow** → **Run workflow**
-4. 等待构建完成后，点击对应的运行记录
-5. 在页面底部 **Artifacts** 区域下载 **bujuan-release-apk**（保留 30 天）
+1. 将此 PR 合并到 `feature/new-ui`
+2. 打开仓库页面，点击顶部 **Actions** 标签
+3. 在左侧选择 **Build APK**
+4. 点击右侧 **Run workflow** → **Run workflow**（绿色按钮）
+5. 等待构建完成（约 5~10 分钟），点击对应的运行记录
+6. 在页面底部 **Artifacts** 区域下载 **bujuan-release-apk**（保留 30 天）
 
 #### 方式二：发布正式版本（打 Tag 自动发布）
 
