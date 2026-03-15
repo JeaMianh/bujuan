@@ -40,7 +40,78 @@
 
 
 ### 代码部署编译
-- `flutter pub get`
-- `flutter build apk --release`
-- `flutter build ios`
-- `flutter build macos`
+
+#### 本地编译
+```bash
+flutter pub get
+flutter build apk --release   # Android
+flutter build ios              # iOS
+flutter build macos            # macOS
+```
+
+---
+
+### 在线自动构建 APK（GitHub Actions）
+
+本项目已配置 GitHub Actions 工作流，可在 GitHub 上直接构建可安装的 APK，无需本地环境。
+
+#### 方式一：手动触发构建（获取 APK）
+
+1. 打开仓库页面，点击顶部 **Actions** 标签
+2. 在左侧选择 **Build APK**
+3. 点击右侧 **Run workflow** → **Run workflow**
+4. 等待构建完成后，点击对应的运行记录
+5. 在页面底部 **Artifacts** 区域下载 **bujuan-release-apk**（保留 30 天）
+
+#### 方式二：发布正式版本（打 Tag 自动发布）
+
+推送版本标签后，工作流会自动构建 APK 并创建 GitHub Release：
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+之后在仓库 **Releases** 页面即可看到可下载的 APK 文件。
+
+---
+
+### 配置 APK 正式签名（可选，推荐用于发布）
+
+> 默认情况下使用 debug 签名构建，已可正常安装。若需要正式签名（例如上架应用市场），请按以下步骤操作。
+
+#### 第一步：生成签名 Keystore
+
+在本地终端执行（需安装 JDK）：
+
+```bash
+keytool -genkey -v \
+  -keystore release-keystore.jks \
+  -keyalg RSA -keysize 2048 -validity 10000 \
+  -alias bujuan \
+  -storepass YOUR_KEYSTORE_PASSWORD \
+  -keypass YOUR_KEY_PASSWORD
+```
+
+> ⚠️ 请将 `YOUR_KEYSTORE_PASSWORD` 和 `YOUR_KEY_PASSWORD` 替换为你自己设置的密码，并妥善保存 `release-keystore.jks` 文件，丢失后无法更新已发布的应用。
+
+#### 第二步：将 Keystore 转换为 Base64
+
+```bash
+base64 -i release-keystore.jks | tr -d '\n'
+```
+
+复制输出的字符串备用。
+
+#### 第三步：在 GitHub 仓库配置 Secrets
+
+进入仓库 **Settings → Secrets and variables → Actions → New repository secret**，依次添加以下 4 个 Secret：
+
+| Secret 名称        | 说明                                  |
+|--------------------|---------------------------------------|
+| `KEYSTORE_BASE64`  | 上一步 base64 编码后的 keystore 内容  |
+| `KEYSTORE_PASSWORD`| Keystore 的密码（`-storepass`）       |
+| `KEY_ALIAS`        | 密钥别名（`-alias`，如 `bujuan`）     |
+| `KEY_PASSWORD`     | 密钥密码（`-keypass`）                |
+
+配置完成后，下次构建时 CI 会自动使用正式签名打包 APK。
